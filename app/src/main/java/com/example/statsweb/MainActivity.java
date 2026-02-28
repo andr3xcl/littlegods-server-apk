@@ -34,6 +34,7 @@ import androidx.core.content.FileProvider;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
+import androidx.core.widget.NestedScrollView;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
@@ -49,6 +50,16 @@ import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import android.util.Xml;
+import android.widget.ImageView;
+
+import com.bumptech.glide.Glide;
+
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+
+import java.io.StringReader;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -58,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
     private String currentUrl = STATS_URL;
 
     private WebView webView;
-    private LinearLayout dashboard;
+    private NestedScrollView dashboard;
     private FrameLayout webContainer;
     private FrameLayout loadingOverlay;
     private LinearLayout errorOverlay;
@@ -68,7 +79,12 @@ public class MainActivity extends AppCompatActivity {
 
     private final OkHttpClient httpClient = new OkHttpClient();
     private final String GITHUB_RELEASE_URL = "https://api.github.com/repos/andr3xcl/littlegods-server-apk/releases/latest";
+    private final String YOUTUBE_RSS_URL = "https://www.youtube.com/feeds/videos.xml?channel_id=UCKBugJznx8oCjEgl304pNvQ";
+    private final String YOUTUBE_CHANNEL_URL = "https://www.youtube.com/@Littlegods_cl";
     private GitHubRelease latestRelease;
+    
+    private LinearLayout youtubeContainer;
+    private View youtubeProgress;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -181,7 +197,15 @@ public class MainActivity extends AppCompatActivity {
         updatePill = findViewById(R.id.updatePill);
         updatePill.setOnClickListener(v -> showUpdateDialog());
 
+        youtubeContainer = findViewById(R.id.youtubeContainer);
+        youtubeProgress = findViewById(R.id.youtubeProgress);
+        findViewById(R.id.btnYoutubeChannel).setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(YOUTUBE_CHANNEL_URL));
+            startActivity(intent);
+        });
+
         checkUpdates();
+        fetchYoutubeVideos();
     }
 
     private void openWebsite(String url) {
@@ -343,6 +367,92 @@ public class MainActivity extends AppCompatActivity {
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
+    }
+
+    private void fetchYoutubeVideos() {
+        Request request = new Request.Builder().url(YOUTUBE_RSS_URL).build();
+        httpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                new Handler(Looper.getMainLooper()).post(() -> youtubeProgress.setVisibility(View.GONE));
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful() && response.body() != null) {
+                    String xml = response.body().string();
+                    List<YoutubeVideo> videos = parseYoutubeRss(xml);
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        youtubeProgress.setVisibility(View.GONE);
+                        displayYoutubeVideos(videos);
+                    });
+                }
+            }
+        });
+    }
+
+    private List<YoutubeVideo> parseYoutubeRss(String xml) {
+        List<YoutubeVideo> videos = new ArrayList<>();
+        try {
+            XmlPullParser parser = Xml.newPullParser();
+            parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
+            parser.setInput(new StringReader(xml));
+
+            int eventType = parser.getEventType();
+            YoutubeVideo currentVideo = null;
+
+            while (eventType != XmlPullParser.END_DOCUMENT && videos.size() < 2) {
+                String name = parser.getName();
+                switch (eventType) {
+                    case XmlPullParser.START_TAG:
+                        if ("entry".equals(name)) {
+                            currentVideo = new YoutubeVideo();
+                        } else if (currentVideo != null) {
+                            if ("title".equals(name)) {
+                                currentVideo.title = parser.nextText();
+                            } else if ("yt:videoId".equals(name)) {
+                                currentVideo.id = parser.nextText();
+                            }
+                        }
+                        break;
+                    case XmlPullParser.END_TAG:
+                        if ("entry".equals(name) && currentVideo != null) {
+                            videos.add(currentVideo);
+                            currentVideo = null;
+                        }
+                        break;
+                }
+                eventType = parser.next();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return videos;
+    }
+
+    private void displayYoutubeVideos(List<YoutubeVideo> videos) {
+        youtubeContainer.removeAllViews();
+        for (YoutubeVideo video : videos) {
+            View itemView = LayoutInflater.from(this).inflate(R.layout.item_youtube_video, youtubeContainer, false);
+            TextView title = itemView.findViewById(R.id.videoTitle);
+            ImageView thumbnail = itemView.findViewById(R.id.videoThumbnail);
+
+            title.setText(video.title);
+            String thumbUrl = "https://i.ytimg.com/vi/" + video.id + "/hqdefault.jpg";
+            Glide.with(this).load(thumbUrl).into(thumbnail);
+
+            itemView.setOnClickListener(v -> {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/watch?v=" + video.id));
+                startActivity(intent);
+            });
+
+            youtubeContainer.addView(itemView);
+        }
+    }
+
+    private static class YoutubeVideo {
+        String title;
+        String id;
     }
 
     @Override
