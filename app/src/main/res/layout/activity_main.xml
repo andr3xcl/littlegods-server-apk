@@ -22,6 +22,8 @@
             android:textSize="28sp"
             android:textStyle="bold" />
 
+        <include layout="@layout/update_pill" />
+
         <!-- Stats Card -->
         <androidx.cardview.widget.CardView
             android:id="@+id/btnStats"
