@@ -191,64 +191,42 @@
                 </FrameLayout>
             </LinearLayout>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+            <!-- API Pill -->
+            <FrameLayout
+                android:id="@+id/btnApi"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
                 android:layout_marginTop="16dp"
-                android:orientation="horizontal"
-                android:weightSum="100">
+                android:background="@drawable/api_pill_bg"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless">
 
-                <!-- API Card -->
-                <FrameLayout
-                    android:id="@+id/btnApi"
-                    android:layout_width="0dp"
-                    android:layout_height="135dp"
-                    android:layout_weight="48"
-                    android:background="@drawable/card_background"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:foreground="?attr/selectableItemBackgroundBorderless">
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="16dp">
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:padding="16dp">
-                        <androidx.cardview.widget.CardView
-                            android:layout_width="64dp"
-                            android:layout_height="64dp"
-                            app:cardCornerRadius="32dp"
-                            app:cardElevation="0dp"
-                            app:cardBackgroundColor="#1AFFFFFF">
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:gravity="center"
-                                android:text="📜"
-                                android:textSize="32sp" />
-                        </androidx.cardview.widget.CardView>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="📜"
+                        android:textSize="18sp" />
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="12dp"
-                            android:text="Docs API"
-                            android:textColor="#FFFFFF"
-                            android:textSize="18sp"
-                            android:fontFamily="sans-serif-condensed-medium"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:text="Lista de endpoints"
-                            android:textColor="#4DFFFFFF"
-                            android:textSize="12sp" />
-                    </LinearLayout>
-                </FrameLayout>
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="Docs API"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:fontFamily="sans-serif-medium"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </FrameLayout>
 
             <!-- User Profile / Channel Section -->
             <TextView
