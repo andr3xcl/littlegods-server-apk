@@ -3,5 +3,8 @@
     <!-- Allow cleartext (HTTP) traffic to the user's server IP -->
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">68.211.73.62</domain>
+        <domain includeSubdomains="true">littlegods.space</domain>
+        <domain includeSubdomains="true">web.littlegods.space</domain>
+        <domain includeSubdomains="true">admin.littlegods.space</domain>
     </domain-config>
 </network-security-config>

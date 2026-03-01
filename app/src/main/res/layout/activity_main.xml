@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#121212">
@@ -16,166 +17,305 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="24dp">
+            android:padding="28dp">
+
+            <!-- App Logo/Title Area -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="16dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Littlegods\nServer"
+                    android:textColor="#FFFFFF"
+                    android:textSize="32sp"
+                    android:lineSpacingExtra="2dp"
+                    android:fontFamily="sans-serif-black"
+                    android:textStyle="bold" />
+
+                <include layout="@layout/update_pill" />
+            </LinearLayout>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Littlegods Server"
-                android:textColor="#FFFFFF"
-                android:textSize="28sp"
-                android:textStyle="bold" />
-
-            <include layout="@layout/update_pill" />
+                android:layout_marginTop="8dp"
+                android:text="Bienvenido al centro de control"
+                android:textColor="#66FFFFFF"
+                android:textSize="14sp"
+                android:fontFamily="sans-serif-medium" />
 
             <!-- Main Actions -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:layout_marginBottom="12dp"
-                android:text="Acceso Rápido"
-                android:textColor="#88FFFFFF"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:textAllCaps="true" />
+                android:layout_marginTop="40dp"
+                android:layout_marginBottom="16dp"
+                android:text="SERVICIOS"
+                android:textColor="#4DFFFFFF"
+                android:textSize="12sp"
+                android:letterSpacing="0.1"
+                android:textStyle="bold" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:weightSum="2">
+                android:weightSum="100">
 
                 <!-- Stats Card -->
-                <androidx.cardview.widget.CardView
+                <FrameLayout
                     android:id="@+id/btnStats"
                     android:layout_width="0dp"
-                    android:layout_height="120dp"
-                    android:layout_marginEnd="8dp"
-                    android:layout_weight="1"
+                    android:layout_height="160dp"
+                    android:layout_weight="48"
+                    android:background="@drawable/card_background"
                     android:clickable="true"
                     android:focusable="true"
-                    android:foreground="?attr/selectableItemBackground">
+                    android:foreground="?attr/selectableItemBackgroundBorderless">
 
-                    <FrameLayout
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:background="@drawable/card_background">
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="16dp">
 
-                        <LinearLayout
+                        <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_gravity="center"
-                            android:gravity="center"
-                            android:orientation="vertical">
+                            android:text="📊"
+                            android:textSize="40sp" />
 
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="📈"
-                                android:textSize="32sp" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:text="Web Stats"
+                            android:textColor="#FFFFFF"
+                            android:textSize="18sp"
+                            android:fontFamily="sans-serif-condensed-medium"
+                            android:textStyle="bold" />
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Estadísticas web"
+                            android:textColor="#4DFFFFFF"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+                </FrameLayout>
 
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="4dp"
-                                android:text="Web Stats"
-                                android:textColor="#FFFFFF"
-                                android:textSize="16sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-                    </FrameLayout>
-                </androidx.cardview.widget.CardView>
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="4" />
 
                 <!-- Admin Card -->
-                <androidx.cardview.widget.CardView
+                <FrameLayout
                     android:id="@+id/btnAdmin"
                     android:layout_width="0dp"
-                    android:layout_height="120dp"
-                    android:layout_marginStart="8dp"
-                    android:layout_weight="1"
+                    android:layout_height="160dp"
+                    android:layout_weight="48"
+                    android:background="@drawable/card_background"
                     android:clickable="true"
                     android:focusable="true"
-                    android:foreground="?attr/selectableItemBackground">
+                    android:foreground="?attr/selectableItemBackgroundBorderless">
 
-                    <FrameLayout
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:background="@drawable/card_background">
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="16dp">
 
-                        <LinearLayout
+                        <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_gravity="center"
-                            android:gravity="center"
-                            android:orientation="vertical">
+                            android:text="🛠️"
+                            android:textSize="40sp" />
 
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="🛡️"
-                                android:textSize="32sp" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:text="Admin"
+                            android:textColor="#FFFFFF"
+                            android:textSize="18sp"
+                            android:fontFamily="sans-serif-condensed-medium"
+                            android:textStyle="bold" />
 
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="4dp"
-                                android:text="IW4MAdmin"
-                                android:textColor="#FFFFFF"
-                                android:textSize="16sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-                    </FrameLayout>
-                </androidx.cardview.widget.CardView>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Administración"
+                            android:textColor="#4DFFFFFF"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+                </FrameLayout>
             </LinearLayout>
 
-            <!-- YouTube Section -->
+            <!-- User Profile / Channel Section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="48dp"
+                android:layout_marginBottom="16dp"
+                android:text="COMUNIDAD"
+                android:textColor="#4DFFFFFF"
+                android:textSize="12sp"
+                android:letterSpacing="0.1"
+                android:textStyle="bold" />
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/card_background"
+                android:padding="20dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <androidx.cardview.widget.CardView
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
+                        app:cardCornerRadius="32dp"
+                        app:cardElevation="0dp"
+                        app:cardBackgroundColor="#00000000">
+                        <ImageView
+                            android:id="@+id/channelLogo"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/ic_launcher_foreground" />
+                    </androidx.cardview.widget.CardView>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Littlegods CL"
+                            android:textColor="#FFFFFF"
+                            android:textSize="18sp"
+                            android:fontFamily="sans-serif-black" />
+
+                        <TextView
+                            android:id="@+id/subscriberCount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Cargando suscriptores..."
+                            android:textColor="#80FFFFFF"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <ImageButton
+                        android:id="@+id/btnYoutubeChannel"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/back_button_bg"
+                        android:padding="10dp"
+                        android:scaleType="centerInside"
+                        android:src="@android:drawable/ic_menu_slideshow"
+                        android:tint="#FF0000" />
+                </LinearLayout>
+            </FrameLayout>
+
+            <!-- Social Links Grid -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Últimos Vídeos"
-                    android:textColor="#FFFFFF"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/btnYoutubeChannel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Ver Canal →"
-                    android:textColor="#FF0000"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:clipToPadding="false"
-                android:scrollbars="none">
+                android:orientation="horizontal"
+                android:weightSum="100">
 
-                <LinearLayout
-                    android:id="@+id/youtubeContainer"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-                    <!-- Dynamic YouTube Items here -->
-                    <ProgressBar
-                        android:id="@+id/youtubeProgress"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:indeterminateTint="#FF0000" />
-                </LinearLayout>
-            </HorizontalScrollView>
+                <FrameLayout
+                    android:id="@+id/btnGithub"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="48"
+                    android:background="@drawable/card_background"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="📁"
+                            android:textSize="24sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="GitHub"
+                            android:textColor="#FFFFFF"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </FrameLayout>
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="4" />
+
+                <FrameLayout
+                    android:id="@+id/btnPlutonium"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="48"
+                    android:background="@drawable/card_background"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="💬"
+                            android:textSize="24sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="Plutonium"
+                            android:textColor="#FFFFFF"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </FrameLayout>
+            </LinearLayout>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
