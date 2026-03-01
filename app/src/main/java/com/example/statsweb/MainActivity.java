@@ -1,5 +1,9 @@
 package com.example.statsweb;
 
+import android.animation.ArgbEvaluator;
+import android.animation.ValueAnimator;
+import android.graphics.drawable.GradientDrawable;
+import android.view.ViewGroup;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Intent;
@@ -50,10 +54,11 @@ import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import android.util.Xml;
+import android.util.TypedValue;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
+import android.content.res.Configuration;
 
 import java.util.ArrayList;
 
@@ -76,12 +81,16 @@ public class MainActivity extends AppCompatActivity {
     private final OkHttpClient httpClient = new OkHttpClient();
     private final String GITHUB_URL = "https://github.com/andr3xcl?tab=repositories";
     private final String PLUTONIUM_URL = "https://forum.plutonium.pw/user/littlegods";
+    private final String DISCORD_URL = "https://discord.littlegods.space";
     private final String YOUTUBE_CHANNEL_URL = "https://www.youtube.com/@Littlegods_cl";
     private final String CHANNEL_LOGO_URL = "https://yt3.googleusercontent.com/YZ7OPX5q7qKb4pFESi9knX2_16YguxEgA-r_6rpw6gAYliNhLvKbODnA87nfCm18iniKvYNz=s160-c-k-c0x00ffffff-no-rj";
     private GitHubRelease latestRelease;
     
     private ImageView channelLogo;
     private TextView subscriberCount;
+    private ImageView plutoniumIcon;
+    private Handler plutoniumAnimHandler = new Handler(Looper.getMainLooper());
+    private boolean showingPlutoniumLogo = true;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -120,12 +129,20 @@ public class MainActivity extends AppCompatActivity {
         
         View btnStats = findViewById(R.id.btnStats);
         View btnAdmin = findViewById(R.id.btnAdmin);
+        View btnApi = findViewById(R.id.btnApi);
         ImageButton btnBackToHome = findViewById(R.id.btnBackToHome);
         Button retryButton = findViewById(R.id.retryButton);
 
         // Dashboard buttons
         btnStats.setOnClickListener(v -> openWebsite(STATS_URL));
         btnAdmin.setOnClickListener(v -> openWebsite(ADMIN_URL));
+        btnApi.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ApiDocsActivity.class);
+            // Current theme state
+            DayNightToggle toggle = findViewById(R.id.dayNightToggle);
+            intent.putExtra("night_mode", toggle != null ? toggle.isNight() : true);
+            startActivity(intent);
+        });
 
         // Home button in WebView
         btnBackToHome.setOnClickListener(v -> showDashboard());
@@ -194,21 +211,70 @@ public class MainActivity extends AppCompatActivity {
         updatePill = findViewById(R.id.updatePill);
         updatePill.setOnClickListener(v -> showUpdateDialog());
 
+        // Theme Toggle Setup
+        DayNightToggle dayNightToggle = findViewById(R.id.dayNightToggle);
+        
+        // System Theme Detection
+        int nightModeFlags = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        boolean isSystemNight = nightModeFlags == Configuration.UI_MODE_NIGHT_YES;
+        
+        if (dayNightToggle != null) {
+            dayNightToggle.setNight(isSystemNight, false);
+            dayNightToggle.setOnThemeChangeListener(this::updateTheme);
+        }
+        
+        // Final initial theme apply
+        updateTheme(isSystemNight);
+
         // Community Section
         channelLogo = findViewById(R.id.channelLogo);
         subscriberCount = findViewById(R.id.subscriberCount);
         
         findViewById(R.id.btnYoutubeChannel).setOnClickListener(v -> openInBrowser(YOUTUBE_CHANNEL_URL));
         findViewById(R.id.btnGithub).setOnClickListener(v -> openInBrowser(GITHUB_URL));
+        findViewById(R.id.btnDiscord).setOnClickListener(v -> openDiscord());
         findViewById(R.id.btnPlutonium).setOnClickListener(v -> openInBrowser(PLUTONIUM_URL));
+
+        plutoniumIcon = findViewById(R.id.plutoniumIcon);
+        startPlutoniumAnimation();
 
         checkUpdates();
         setupProfile();
+
+        // Handle Back Press with modern API
+        getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (webContainer.getVisibility() == View.VISIBLE) {
+                    if (webView.canGoBack()) {
+                        webView.goBack();
+                    } else {
+                        showDashboard();
+                    }
+                } else {
+                    setEnabled(false);
+                    getOnBackPressedDispatcher().onBackPressed();
+                    setEnabled(true);
+                }
+            }
+        });
     }
 
     private void openInBrowser(String url) {
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
         startActivity(intent);
+    }
+
+    private void openDiscord() {
+        try {
+            // Try to open via Discord app if installed
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(DISCORD_URL));
+            intent.setPackage("com.discord");
+            startActivity(intent);
+        } catch (Exception e) {
+            // Fallback to browser
+            openInBrowser(DISCORD_URL);
+        }
     }
 
     private void setupProfile() {
@@ -235,19 +301,6 @@ public class MainActivity extends AppCompatActivity {
         webView.loadUrl("about:blank");
         webContainer.setVisibility(View.GONE);
         dashboard.setVisibility(View.VISIBLE);
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (webContainer.getVisibility() == View.VISIBLE) {
-            if (webView.canGoBack()) {
-                webView.goBack();
-            } else {
-                showDashboard();
-            }
-        } else {
-            super.onBackPressed();
-        }
     }
 
     @Override
@@ -384,8 +437,144 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    private void updateTheme(boolean isNight) {
+        WaveView waveView = findViewById(R.id.waveView);
+        if (waveView != null) waveView.setNightMode(isNight);
+        
+        ImageView bannerImage = findViewById(R.id.bannerImage);
+        if (bannerImage != null) {
+            bannerImage.setImageResource(isNight ? R.drawable.banner_card_youtube : R.drawable.banner_card_youtube_light);
+        }
+
+        // Colors
+        int bgColor = isNight ? 0xFF0F0F0F : 0xFFE0F2F7;
+        int titleColor = isNight ? 0xFFFFFFFF : 0xFF1A1A1A;
+        int subtitleColor = isNight ? 0x99FFFFFF : 0x99000000;
+        int sectionColor = isNight ? 0x4DFFFFFF : 0x4D000000;
+
+        // Animate Root Background
+        ValueAnimator bgAnim = ValueAnimator.ofObject(new ArgbEvaluator(), 
+            ((android.graphics.drawable.ColorDrawable)dashboard.getRootView().getBackground()).getColor(), bgColor);
+        bgAnim.setDuration(500);
+        bgAnim.addUpdateListener(animator -> dashboard.getRootView().setBackgroundColor((int) animator.getAnimatedValue()));
+        // Note: WaveView covers the background, but this is good for consistency
+        bgAnim.start();
+
+        // Dashboard overlay
+        dashboard.setBackgroundColor(isNight ? 0x00000000 : 0x11FFFFFF);
+
+        // Update Text Colors
+        animateText(findViewById(R.id.appTitle), titleColor);
+        animateText(findViewById(R.id.appSubtitle), subtitleColor);
+        animateText(findViewById(R.id.sectionServicios), sectionColor);
+        animateText(findViewById(R.id.sectionComunidad), sectionColor);
+        animateText(findViewById(R.id.channelName), 0xFFFFFFFF);
+        animateText(findViewById(R.id.subscriberCount), 0x99FFFFFF);
+
+        // Update Cards
+        int cardBaseColor = isNight ? 0x1AFFFFFF : 0xFFFFFFFF;
+        int cardStrokeColor = isNight ? 0x20FFFFFF : 0x1A000000;
+        float cardElevation = isNight ? 0f : 8f;
+
+        updateCardStyle(findViewById(R.id.btnStats), cardBaseColor, cardStrokeColor, cardElevation, isNight);
+        updateCardStyle(findViewById(R.id.btnAdmin), cardBaseColor, cardStrokeColor, cardElevation, isNight);
+        updateCardStyle(findViewById(R.id.profileCard), cardBaseColor, cardStrokeColor, cardElevation, isNight);
+        updateCardStyle(findViewById(R.id.btnGithub), cardBaseColor, cardStrokeColor, cardElevation, isNight);
+        updateCardStyle(findViewById(R.id.btnDiscord), cardBaseColor, cardStrokeColor, cardElevation, isNight);
+        updateCardStyle(findViewById(R.id.btnPlutonium), cardBaseColor, cardStrokeColor, cardElevation, isNight);
+        updateCardStyle(findViewById(R.id.btnApi), cardBaseColor, cardStrokeColor, cardElevation, isNight);
+        
+        // Internal text colors for cards
+        updateNestedTexts((ViewGroup) findViewById(R.id.btnStats), titleColor, subtitleColor);
+        updateNestedTexts((ViewGroup) findViewById(R.id.btnAdmin), titleColor, subtitleColor);
+        updateNestedTexts((ViewGroup) findViewById(R.id.btnGithub), titleColor, subtitleColor);
+        updateNestedTexts((ViewGroup) findViewById(R.id.btnDiscord), titleColor, subtitleColor);
+        updateNestedTexts((ViewGroup) findViewById(R.id.btnPlutonium), titleColor, subtitleColor);
+        updateNestedTexts((ViewGroup) findViewById(R.id.btnApi), titleColor, subtitleColor);
+    }
+
+    private void animateText(TextView view, int toColor) {
+        if (view == null) return;
+        ValueAnimator anim = ValueAnimator.ofObject(new ArgbEvaluator(), view.getCurrentTextColor(), toColor);
+        anim.setDuration(500);
+        anim.addUpdateListener(animation -> view.setTextColor((int) animation.getAnimatedValue()));
+        anim.start();
+    }
+
+    private void updateCardStyle(View card, int bgColor, int strokeColor, float elevation, boolean isNight) {
+        if (card == null) return;
+        
+        // Don't overwrite background for profileCard to keep the YouTube banner
+        if (card.getId() == R.id.profileCard) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                card.setElevation(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, elevation, getResources().getDisplayMetrics()));
+            }
+            return;
+        }
+
+        GradientDrawable gd = new GradientDrawable();
+        gd.setColor(bgColor);
+        gd.setCornerRadius(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics()));
+        gd.setStroke((int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics()), strokeColor);
+        card.setBackground(gd);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            card.setElevation(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, elevation, getResources().getDisplayMetrics()));
+        }
+    }
+
+    private void updateNestedTexts(ViewGroup group, int titleColor, int subtitleColor) {
+        if (group == null) return;
+        for (int i = 0; i < group.getChildCount(); i++) {
+            View child = group.getChildAt(i);
+            if (child instanceof TextView) {
+                TextView tv = (TextView) child;
+                // If it's a big emoji (size > 24sp approx), don't color it or just use titleColor
+                if (tv.getTextSize() > TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 24, getResources().getDisplayMetrics())) {
+                    // Emoji, skip coloring
+                } else if (tv.getTextSize() > TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 14, getResources().getDisplayMetrics())) {
+                    animateText(tv, titleColor);
+                } else {
+                    animateText(tv, subtitleColor);
+                }
+            } else if (child instanceof ViewGroup) {
+                updateNestedTexts((ViewGroup) child, titleColor, subtitleColor);
+            }
+        }
+    }
+
+    private void startPlutoniumAnimation() {
+        plutoniumAnimHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (plutoniumIcon == null) return;
+                
+                // Fade out
+                plutoniumIcon.animate()
+                        .alpha(0f)
+                        .setDuration(500)
+                        .withEndAction(() -> {
+                            // Switch source
+                            showingPlutoniumLogo = !showingPlutoniumLogo;
+                            plutoniumIcon.setImageResource(showingPlutoniumLogo ? 
+                                    R.drawable.icon_plutonium : R.drawable.icon_profile_plutonium);
+                            // Fade in
+                            plutoniumIcon.animate()
+                                    .alpha(1f)
+                                    .setDuration(500)
+                                    .start();
+                        })
+                        .start();
+                
+                plutoniumAnimHandler.postDelayed(this, 3000);
+            }
+        }, 3000);
+    }
+
     @Override
     protected void onDestroy() {
+        if (plutoniumAnimHandler != null) {
+            plutoniumAnimHandler.removeCallbacksAndMessages(null);
+        }
         if (webView != null) {
             webView.destroy();
         }
