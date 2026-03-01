@@ -13,6 +13,15 @@ import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.os.Handler;
+import android.os.Looper;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import java.io.IOException;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.WindowCompat;
@@ -26,7 +35,13 @@ public class ApiDocsActivity extends AppCompatActivity {
 
     private WaveView waveView;
     private LinearLayout apiContent;
+    private View statusDot;
+    private TextView statusText;
+    private View statusContainer;
     private boolean isNightMode = true;
+    private final OkHttpClient httpClient = new OkHttpClient();
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private static final String HEALTH_CHECK_URL = "https://web.littlegods.space/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +68,9 @@ public class ApiDocsActivity extends AppCompatActivity {
 
         waveView = findViewById(R.id.waveView);
         apiContent = findViewById(R.id.apiContent);
+        statusDot = findViewById(R.id.statusDot);
+        statusText = findViewById(R.id.statusText);
+        statusContainer = findViewById(R.id.statusContainer);
         ImageButton btnBack = findViewById(R.id.btnBack);
 
         btnBack.setOnClickListener(v -> finish());
@@ -62,6 +80,49 @@ public class ApiDocsActivity extends AppCompatActivity {
         
         populateEndpoints();
         updateTheme(isNightMode);
+        checkApiStatus();
+    }
+
+    private void checkApiStatus() {
+        Request request = new Request.Builder()
+                .url(HEALTH_CHECK_URL)
+                .build();
+
+        statusText.setText("Comprobando...");
+        statusDot.setBackground(createDotDrawable(0xFF808080));
+
+        httpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                handler.post(() -> {
+                    statusText.setText("Desconectado");
+                    statusDot.setBackground(createDotDrawable(0xFFFF4444));
+                });
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                handler.post(() -> {
+                    if (response.isSuccessful()) {
+                        statusText.setText("En línea");
+                        statusDot.setBackground(createDotDrawable(0xFF00C853));
+                    } else {
+                        statusText.setText("Error de servidor");
+                        statusDot.setBackground(createDotDrawable(0xFFFFBB33));
+                    }
+                });
+            }
+        });
+        
+        // Refresh every 30 seconds
+        handler.postDelayed(this::checkApiStatus, 30000);
+    }
+
+    private GradientDrawable createDotDrawable(int color) {
+        GradientDrawable gd = new GradientDrawable();
+        gd.setShape(GradientDrawable.OVAL);
+        gd.setColor(color);
+        return gd;
     }
 
     private void updateTheme(boolean isNight) {
@@ -77,6 +138,10 @@ public class ApiDocsActivity extends AppCompatActivity {
         ((TextView)findViewById(R.id.apiTitle)).setTextColor(titleColor);
         ((TextView)findViewById(R.id.apiSubtitle)).setTextColor(subtitleColor);
         
+        // Update status container
+        updateCardStyle(statusContainer, isNight);
+        statusText.setTextColor(titleColor);
+
         // Update items if they exist
         for (int i = 0; i < apiContent.getChildCount(); i++) {
             View v = apiContent.getChildAt(i);
@@ -131,76 +196,76 @@ public class ApiDocsActivity extends AppCompatActivity {
 
     private void populateEndpoints() {
         // Auth & Identity
-        addSection("🔐 Auth & Identity");
-        addEndpoint("GET", "/discord", "Initializes Discord OAuth2 login.");
-        addEndpoint("GET", "/discord/callback", "Callback for Discord login.");
-        addEndpoint("GET", "/logout", "Logs out the current user session.");
-        addEndpoint("GET", "/me", "Returns current user profile (Discord data).");
-        addEndpoint("GET", "/link-status", "Returns linking status and linked Plutonium accounts.");
-        addEndpoint("POST", "/link-web", "Links a game account using playerName, guid, and password.");
-        addEndpoint("POST", "/switch-account", "Switches the active Plutonium account for the user.");
-        addEndpoint("POST", "/unlink", "Unlinks specific or all game accounts.");
+        addSection("🔐 Autenticación e Identidad");
+        addEndpoint("GET", "/discord", "Inicia el inicio de sesión con Discord OAuth2.");
+        addEndpoint("GET", "/discord/callback", "Callback para el inicio de sesión de Discord.");
+        addEndpoint("GET", "/logout", "Cierra la sesión del usuario actual.");
+        addEndpoint("GET", "/me", "Devuelve el perfil del usuario (datos de Discord).");
+        addEndpoint("GET", "/link-status", "Devuelve el estado de vinculación y cuentas de Plutonium.");
+        addEndpoint("POST", "/link-web", "Vincula una cuenta de juego (playerName, guid, password).");
+        addEndpoint("POST", "/switch-account", "Cambia la cuenta activa de Plutonium.");
+        addEndpoint("POST", "/unlink", "Desvincula una o todas las cuentas de juego.");
 
         // Players & Stats
-        addSection("👤 Players & Stats");
-        addEndpoint("GET", "/search", "Admin: Search for players by name or GUID.");
-        addEndpoint("GET", "/search-public", "Public search for players (min 3 characters).");
-        addEndpoint("GET", "/:identifier/overall", "Gets comprehensive stats, map records, and matches.");
+        addSection("👤 Jugadores y Estadísticas");
+        addEndpoint("GET", "/search", "Admin: Busca jugadores por nombre o GUID.");
+        addEndpoint("GET", "/search-public", "Búsqueda pública de jugadores (mín. 3 caracteres).");
+        addEndpoint("GET", "/:identifier/overall", "Estadísticas, récords de mapas y partidas.");
 
         // Economy & Rewards
-        addSection("💰 Economy & Rewards");
-        addEndpoint("GET", "/play/live-status", "Returns current in-game status of the player.");
-        addEndpoint("POST", "/play/mystery-box", "Web-based mystery box spin (950 pts).");
-        addEndpoint("POST", "/play/coin-flip", "Gambles a set amount of points on heads or tails.");
-        addEndpoint("POST", "/play/mystery-box-online", "Sends weapon delivery request (2000 pts).");
-        addEndpoint("POST", "/play/wunderfizz-online", "Sends perk delivery request (2000 pts).");
-        addEndpoint("POST", "/play/pack-a-punch-online", "Upgrades current in-game weapon (8000 pts).");
-        addEndpoint("POST", "/transfer", "Transfers points to another player.");
-        addEndpoint("POST", "/claim-daily", "Claims the $5,000 daily reward.");
-        addEndpoint("POST", "/welcome-reward", "Claims the one-time $30,000 welcome gift.");
-        addEndpoint("GET", "/penalty-status", "Checks for lost funds due to inactivity.");
-        addEndpoint("POST", "/penalty-claim", "Recovers previously lost penalty funds.");
+        addSection("💰 Economía y Recompensas");
+        addEndpoint("GET", "/play/live-status", "Estado actual en el juego del jugador.");
+        addEndpoint("POST", "/play/mystery-box", "Mystery box web (950 pts).");
+        addEndpoint("POST", "/play/coin-flip", "Apuesta puntos a cara o cruz.");
+        addEndpoint("POST", "/play/mystery-box-online", "Solicitud de envío de arma (2000 pts).");
+        addEndpoint("POST", "/play/wunderfizz-online", "Solicitud de envío de ventaja (2000 pts).");
+        addEndpoint("POST", "/play/pack-a-punch-online", "Mejora el arma actual en el juego (8000 pts).");
+        addEndpoint("POST", "/transfer", "Transfiere puntos a otro jugador.");
+        addEndpoint("POST", "/claim-daily", "Reclama la recompensa diaria de $5,000.");
+        addEndpoint("POST", "/welcome-reward", "Reclama el regalo de bienvenida único de $30,000.");
+        addEndpoint("GET", "/penalty-status", "Comprueba fondos perdidos por inactividad.");
+        addEndpoint("POST", "/penalty-claim", "Recupera fondos de penalización.");
         
         // Missions
-        addSection("🎯 Missions");
-        addEndpoint("GET", "/missions/global", "Lists active Daily, Weekly, and Monthly missions.");
-        addEndpoint("POST", "/missions/:type/claim", "Claims reward for a completed mission.");
-        addEndpoint("POST", "/missions/incentive/claim", "Claims the hourly Discord activity incentive.");
+        addSection("🎯 Misiones");
+        addEndpoint("GET", "/missions/global", "Lista misiones diarias, semanales y mensuales.");
+        addEndpoint("POST", "/missions/:type/claim", "Reclama recompensa por misión completada.");
+        addEndpoint("POST", "/missions/incentive/claim", "Reclama incentivo por actividad en Discord.");
 
         // Maps
-        addSection("🗺️ Maps");
-        addEndpoint("GET", "/available", "Lists all supported maps and metadata.");
-        addEndpoint("GET", "/current", "Gets currently selected map in user profile.");
-        addEndpoint("POST", "/select", "Updates selected map for the user.");
+        addSection("🗺️ Mapas");
+        addEndpoint("GET", "/available", "Lista todos los mapas compatibles y sus metadatos.");
+        addEndpoint("GET", "/current", "Mapa seleccionado actualmente en el perfil.");
+        addEndpoint("POST", "/select", "Actualiza el mapa seleccionado para el usuario.");
 
         // GSC Integration
-        addSection("🎮 GSC Integration (In-Game)");
-        addEndpoint("POST", "/heartbeat", "Updates real-time status of a player GUID.");
-        addEndpoint("GET", "/request/:guid", "In-game client polls for commands.");
-        addEndpoint("GET", "/bank/balance/:guid", "Simple balance response (Text/Plain).");
-        addEndpoint("POST", "/bank/transaction", "Handles in-game Bank transactions.");
+        addSection("🎮 Integración GSC (En el juego)");
+        addEndpoint("POST", "/heartbeat", "Actualiza el estado en tiempo real de un GUID.");
+        addEndpoint("GET", "/request/:guid", "El cliente en el juego consulta comandos.");
+        addEndpoint("GET", "/bank/balance/:guid", "Respuesta simple de saldo (Texto/Plano).");
+        addEndpoint("POST", "/bank/transaction", "Maneja transacciones bancarias en el juego.");
 
         // Bot & Registry
-        addSection("🤖 Bot & Registry");
-        addEndpoint("GET", "/registry/data", "Returns current Discord bot settings.");
-        addEndpoint("POST", "/registry/data", "Updates Discord bot settings.");
-        addEndpoint("GET", "/bot/roles", "Lists available Discord roles.");
-        addEndpoint("GET", "/bot/channels", "Lists available Discord channels.");
-        addEndpoint("POST", "/bot/send-embed", "Sends custom Discord embed.");
-        addEndpoint("POST", "/bot/edit-embed", "Edits existing custom embed.");
-        addEndpoint("GET", "/bot/sent-embeds", "History of sent embeds.");
+        addSection("🤖 Bot y Registro");
+        addEndpoint("GET", "/registry/data", "Ajustes actuales del bot de Discord.");
+        addEndpoint("POST", "/registry/data", "Actualiza ajustes del bot de Discord.");
+        addEndpoint("GET", "/bot/roles", "Lista roles de Discord disponibles.");
+        addEndpoint("GET", "/bot/channels", "Lista canales de Discord disponibles.");
+        addEndpoint("POST", "/bot/send-embed", "Envía un embed personalizado a Discord.");
+        addEndpoint("POST", "/bot/edit-embed", "Edita un embed personalizado existente.");
+        addEndpoint("GET", "/bot/sent-embeds", "Historial de embeds enviados.");
 
         // Admin Panel
-        addSection("🛠️ Admin Panel");
-        addEndpoint("POST", "/reset-daily", "Resets daily cooldown for a Discord ID.");
-        addEndpoint("GET", "/missions/config", "View mission queue configuration.");
-        addEndpoint("POST", "/missions/set", "Sets a new mission.");
-        addEndpoint("POST", "/complete-mission", "Force-completes a mission.");
-        addEndpoint("POST", "/api/economy/admin/adjust-bank", "Admin bank adjustment.");
+        addSection("🛠️ Panel de Administración");
+        addEndpoint("POST", "/reset-daily", "Resetea el cooldown diario para un ID de Discord.");
+        addEndpoint("GET", "/missions/config", "Ver configuración de la cola de misiones.");
+        addEndpoint("POST", "/missions/set", "Establece una nueva misión.");
+        addEndpoint("POST", "/complete-mission", "Fuerza la finalización de una misión.");
+        addEndpoint("POST", "/api/economy/admin/adjust-bank", "Ajuste bancario de administrador.");
 
         // GitHub Webhooks
-        addSection("🔄 GitHub Webhooks");
-        addEndpoint("POST", "/webhook", "Receives GitHub events and sends notifications.");
+        addSection("🔄 Webhooks de GitHub");
+        addEndpoint("POST", "/webhook", "Recibe eventos de GitHub y envía notificaciones.");
     }
 
     private void addSection(String title) {

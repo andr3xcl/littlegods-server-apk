@@ -77,6 +77,10 @@ public class DayNightToggle extends View {
         }
     }
 
+    public boolean isNight() {
+        return isNight;
+    }
+
     private void toggle() {
         if (animator != null && animator.isRunning()) return;
         
