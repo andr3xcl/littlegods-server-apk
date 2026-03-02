@@ -6,11 +6,11 @@ Hemos creado esta app pensando especialmente en ustedes, para que tengan todo lo
 
 La aplicación es su **centro de conexión principal con la comunidad de Littlegods**. Está diseñada para que no se pierdan de nada y puedan estar siempre enterados de lo que pasa en el servidor, sin tener que buscar en diferentes lugares. ¡Todo lo importante está aquí dentro!
 
-<img width="786" height="1710" alt="image" src="https://github.com/user-attachments/assets/394d1f4d-75e0-48bb-a520-95f30864b569" />
-<img width="817" height="1759" alt="image" src="https://github.com/user-attachments/assets/b3f56a76-dd72-471e-bf73-3799bbfbd578" />
-
-
-
+<p align="center">
+  <img width="48%" alt="image" src="https://github.com/user-attachments/assets/394d1f4d-75e0-48bb-a520-95f30864b569" />
+  &nbsp; &nbsp;
+  <img width="48%" alt="image" src="https://github.com/user-attachments/assets/b3f56a76-dd72-471e-bf73-3799bbfbd578" />
+</p>
 
 ## ✨ ¿Qué pueden hacer dentro de la app?
 
