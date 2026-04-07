@@ -14,8 +14,8 @@ android {
         applicationId = "com.example.statsweb"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "3.0"
+        versionCode = 2
+        versionName = "3.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

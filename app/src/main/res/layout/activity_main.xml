@@ -228,6 +228,71 @@
                 </LinearLayout>
             </FrameLayout>
 
+            <!-- Server Restart Countdown -->
+            <FrameLayout
+                android:id="@+id/restartCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/restart_countdown_bg"
+                android:padding="20dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <!-- Icon -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="⏱️"
+                        android:textSize="28sp" />
+
+                    <!-- Text Column -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="14dp">
+
+                        <TextView
+                            android:id="@+id/restartTitle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Reinicio del Servidor"
+                            android:textColor="#FFFFFF"
+                            android:textSize="14sp"
+                            android:fontFamily="sans-serif-medium"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/restartCountdown"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="--h --m --s"
+                            android:textColor="#00BCD4"
+                            android:textSize="22sp"
+                            android:fontFamily="sans-serif-black"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/restartStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Cargando..."
+                            android:textColor="#66FFFFFF"
+                            android:textSize="11sp"
+                            android:fontFamily="sans-serif" />
+
+                    </LinearLayout>
+                </LinearLayout>
+            </FrameLayout>
+
             <!-- User Profile / Channel Section -->
             <TextView
                 android:id="@+id/sectionComunidad"

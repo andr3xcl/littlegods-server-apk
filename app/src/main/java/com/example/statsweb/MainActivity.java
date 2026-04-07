@@ -47,7 +47,13 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
+
+import android.os.CountDownTimer;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -91,6 +97,13 @@ public class MainActivity extends AppCompatActivity {
     private ImageView plutoniumIcon;
     private Handler plutoniumAnimHandler = new Handler(Looper.getMainLooper());
     private boolean showingPlutoniumLogo = true;
+
+    // Restart Countdown
+    private TextView restartCountdown;
+    private TextView restartStatus;
+    private CountDownTimer restartTimer;
+    private Handler restartRefreshHandler = new Handler(Looper.getMainLooper());
+    private static final String RESTART_API_URL = "https://api.littlegods.space/api/public/restart/status";
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -240,6 +253,11 @@ public class MainActivity extends AppCompatActivity {
 
         checkUpdates();
         setupProfile();
+
+        // Restart Countdown
+        restartCountdown = findViewById(R.id.restartCountdown);
+        restartStatus = findViewById(R.id.restartStatus);
+        fetchRestartConfig();
 
         // Handle Back Press with modern API
         getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
@@ -483,7 +501,27 @@ public class MainActivity extends AppCompatActivity {
         updateCardStyle(findViewById(R.id.btnDiscord), cardBaseColor, cardStrokeColor, cardElevation, isNight);
         updateCardStyle(findViewById(R.id.btnPlutonium), cardBaseColor, cardStrokeColor, cardElevation, isNight);
         updateCardStyle(findViewById(R.id.btnApi), cardBaseColor, cardStrokeColor, cardElevation, isNight);
-        
+
+        // Restart card theme
+        View restartCard = findViewById(R.id.restartCard);
+        if (restartCard != null) {
+            GradientDrawable restartBg = new GradientDrawable();
+            if (isNight) {
+                restartBg.setColors(new int[]{0x1A00BCD4, 0x1A2196F3});
+            } else {
+                restartBg.setColors(new int[]{0x3300BCD4, 0x332196F3});
+            }
+            restartBg.setOrientation(GradientDrawable.Orientation.TL_BR);
+            restartBg.setCornerRadius(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics()));
+            restartBg.setStroke((int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics()),
+                    isNight ? 0x3300BCD4 : 0x4400BCD4);
+            restartCard.setBackground(restartBg);
+        }
+        TextView restartTitle = findViewById(R.id.restartTitle);
+        if (restartTitle != null) animateText(restartTitle, titleColor);
+        if (restartStatus != null) animateText(restartStatus, subtitleColor);
+        // restartCountdown keeps its cyan color
+
         // Internal text colors for cards
         updateNestedTexts((ViewGroup) findViewById(R.id.btnStats), titleColor, subtitleColor);
         updateNestedTexts((ViewGroup) findViewById(R.id.btnAdmin), titleColor, subtitleColor);
@@ -570,10 +608,108 @@ public class MainActivity extends AppCompatActivity {
         }, 3000);
     }
 
+    private void fetchRestartConfig() {
+        Request request = new Request.Builder()
+                .url(RESTART_API_URL)
+                .build();
+
+        httpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    if (restartCountdown != null) restartCountdown.setText("--h --m --s");
+                    if (restartStatus != null) restartStatus.setText("Sin conexión al servidor");
+                });
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful() && response.body() != null) {
+                    String json = response.body().string();
+                    RestartConfig config = new Gson().fromJson(json, RestartConfig.class);
+                    new Handler(Looper.getMainLooper()).post(() -> startRestartCountdown(config));
+                } else {
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        if (restartCountdown != null) restartCountdown.setText("--h --m --s");
+                        if (restartStatus != null) restartStatus.setText("Error del servidor (" + response.code() + ")");
+                    });
+                }
+            }
+        });
+
+        // Re-fetch every 5 minutes to stay in sync
+        restartRefreshHandler.postDelayed(this::fetchRestartConfig, 5 * 60 * 1000);
+    }
+
+    private void startRestartCountdown(RestartConfig config) {
+        if (config == null) return;
+
+        // If currently restarting
+        if (config.isRestarting) {
+            if (restartCountdown != null) restartCountdown.setText("🔄 Reiniciando...");
+            if (restartStatus != null) restartStatus.setText("El servidor se está reiniciando ahora");
+            return;
+        }
+
+        if (config.nextRestartTime == null) {
+            if (restartCountdown != null) restartCountdown.setText("--h --m --s");
+            if (restartStatus != null) restartStatus.setText("Sin reinicio programado");
+            return;
+        }
+
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+            Date targetDate = sdf.parse(config.nextRestartTime);
+            long diffMillis = targetDate.getTime() - System.currentTimeMillis();
+
+            if (diffMillis <= 0) {
+                if (restartCountdown != null) restartCountdown.setText("00h 00m 00s");
+                if (restartStatus != null) restartStatus.setText("Reinicio completado");
+                return;
+            }
+
+            // Cancel previous timer
+            if (restartTimer != null) restartTimer.cancel();
+
+            if (restartStatus != null) restartStatus.setText("Próximo reinicio programado");
+
+            restartTimer = new CountDownTimer(diffMillis, 1000) {
+                @Override
+                public void onTick(long millisUntilFinished) {
+                    long hours = millisUntilFinished / (60 * 60 * 1000);
+                    long minutes = (millisUntilFinished / (60 * 1000)) % 60;
+                    long seconds = (millisUntilFinished / 1000) % 60;
+                    String text = String.format(Locale.US, "%02dh %02dm %02ds", hours, minutes, seconds);
+                    if (restartCountdown != null) restartCountdown.setText(text);
+                }
+
+                @Override
+                public void onFinish() {
+                    if (restartCountdown != null) restartCountdown.setText("00h 00m 00s");
+                    if (restartStatus != null) restartStatus.setText("Reinicio en progreso...");
+                    // Re-fetch after finishing
+                    restartRefreshHandler.postDelayed(() -> fetchRestartConfig(), 10000);
+                }
+            }.start();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (restartCountdown != null) restartCountdown.setText("--h --m --s");
+            if (restartStatus != null) restartStatus.setText("Error al obtener hora de reinicio");
+        }
+    }
+
     @Override
     protected void onDestroy() {
         if (plutoniumAnimHandler != null) {
             plutoniumAnimHandler.removeCallbacksAndMessages(null);
+        }
+        if (restartRefreshHandler != null) {
+            restartRefreshHandler.removeCallbacksAndMessages(null);
+        }
+        if (restartTimer != null) {
+            restartTimer.cancel();
         }
         if (webView != null) {
             webView.destroy();
@@ -590,5 +726,10 @@ public class MainActivity extends AppCompatActivity {
 
     private static class Asset {
         @SerializedName("browser_download_url") String browserDownloadUrl;
+    }
+
+    private static class RestartConfig {
+        @SerializedName("nextRestartTime") String nextRestartTime;
+        @SerializedName("isRestarting") boolean isRestarting;
     }
 }
